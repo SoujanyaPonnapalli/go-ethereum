@@ -37,9 +37,16 @@ const (
 	writeDelayNThreshold       = 200
 	writeDelayThreshold        = 350 * time.Millisecond
 	writeDelayWarningThrottler = 1 * time.Minute
+	printDelay		   = 10000
 )
 
 var OpenFileLimit = 64
+
+var getStorageTime = time.Since(time.Now())
+var putStorageTime = time.Since(time.Now())
+var delStorageTime = time.Since(time.Now())
+var hasStorageTime = time.Since(time.Now())
+var printInterval = printDelay
 
 type LDBDatabase struct {
 	fn string      // filename for reporting
@@ -100,16 +107,36 @@ func (db *LDBDatabase) Path() string {
 
 // Put puts the given key / value to the queue
 func (db *LDBDatabase) Put(key []byte, value []byte) error {
-	return db.db.Put(key, value, nil)
+	resTime := time.Now()
+	ret := db.db.Put(key, value, nil)
+	putStorageTime += time.Since(resTime)
+	if printInterval == 0 {
+		fmt.Println(time.Now().Format("2006-01-02 15:04:05"), "[Put]", "putStorageTime :", putStorageTime)
+		printInterval = printDelay
+	} else {
+		printInterval -= 1
+	}
+	return ret
 }
 
 func (db *LDBDatabase) Has(key []byte) (bool, error) {
-	return db.db.Has(key, nil)
+	resTime := time.Now()
+	ret, err := db.db.Has(key, nil)
+	hasStorageTime += time.Since(resTime)
+	return ret, err
 }
 
 // Get returns the given key if it's present.
 func (db *LDBDatabase) Get(key []byte) ([]byte, error) {
+	resTime := time.Now()
 	dat, err := db.db.Get(key, nil)
+	getStorageTime += time.Since(resTime)
+	if printInterval == 0 {
+		fmt.Println(time.Now().Format("2006-01-02 15:04:05"), "[Get]", "getStorageTime :", getStorageTime)
+		printInterval = printDelay
+	} else {
+		printInterval -= 1
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +145,10 @@ func (db *LDBDatabase) Get(key []byte) ([]byte, error) {
 
 // Delete deletes the key from the queue and database
 func (db *LDBDatabase) Delete(key []byte) error {
-	return db.db.Delete(key, nil)
+	resTime  := time.Now()
+	ret := db.db.Delete(key, nil)
+	delStorageTime += time.Since(resTime)
+	return ret
 }
 
 func (db *LDBDatabase) NewIterator() iterator.Iterator {
@@ -377,8 +407,16 @@ type ldbBatch struct {
 }
 
 func (b *ldbBatch) Put(key, value []byte) error {
+	resTime := time.Now()
 	b.b.Put(key, value)
+	putStorageTime += time.Since(resTime)
 	b.size += len(value)
+	if printInterval == 0 {
+		fmt.Println(time.Now().Format("2006-01-02 15:04:05"), "[Put Batch]", "putStorageTime :", putStorageTime)
+		printInterval = printDelay
+	} else {
+		printInterval -= 1
+	}
 	return nil
 }
 
@@ -410,7 +448,16 @@ func NewTable(db Database, prefix string) Database {
 }
 
 func (dt *table) Put(key []byte, value []byte) error {
-	return dt.db.Put(append([]byte(dt.prefix), key...), value)
+	resTime := time.Now()
+	ret := dt.db.Put(append([]byte(dt.prefix), key...), value)
+	putStorageTime += time.Since(resTime)
+	if printInterval == 0 {
+		fmt.Println(time.Now().Format("2006-01-02 15:04:05"), "[Put table]", "putStorageTime :", putStorageTime)
+		printInterval = printDelay
+	} else {
+		printInterval -= 1
+	}
+	return ret;
 }
 
 func (dt *table) Has(key []byte) (bool, error) {
@@ -418,7 +465,16 @@ func (dt *table) Has(key []byte) (bool, error) {
 }
 
 func (dt *table) Get(key []byte) ([]byte, error) {
-	return dt.db.Get(append([]byte(dt.prefix), key...))
+	resTime := time.Now()
+	ret, err := dt.db.Get(append([]byte(dt.prefix), key...))
+	getStorageTime += time.Since(resTime)
+	if printInterval == 0 {
+		fmt.Println(time.Now().Format("2006-01-02 15:04:05"), "[Get table]", "getStorageTime :", getStorageTime)
+		printInterval = printDelay
+	} else {
+		printInterval -= 1
+	}
+	return ret, err
 }
 
 func (dt *table) Delete(key []byte) error {
@@ -444,7 +500,16 @@ func (dt *table) NewBatch() Batch {
 }
 
 func (tb *tableBatch) Put(key, value []byte) error {
-	return tb.batch.Put(append([]byte(tb.prefix), key...), value)
+	resTime := time.Now()
+	ret := tb.batch.Put(append([]byte(tb.prefix), key...), value)
+	putStorageTime := time.Since(resTime)
+	if printInterval == 0 {
+		fmt.Println(time.Now().Format("2006-01-02 15:04:05"), "[Put tableBatch]", "putStorageTime :", putStorageTime)
+		printInterval = printDelay
+	} else {
+		printInterval -= 1
+	}
+	return ret
 }
 
 func (tb *tableBatch) Write() error {
