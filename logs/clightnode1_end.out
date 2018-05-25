@@ -1,0 +1,11 @@
+2018-05-25 13:56:02 [Get] getStorageTime : 97.234636ms
+2018-05-25 13:56:02 [Get] getStorageTime : 174.272925ms
+2018-05-25 13:56:02 [Get] getStorageTime : 253.16864ms
+2018-05-25 13:56:03 [Get] getStorageTime : 347.182876ms
+2018-05-25 13:56:03 [Get] getStorageTime : 453.406104ms
+Welcome to the Geth JavaScript console!
+
+instance: Geth/v1.8.9-unstable-d6ed2f67/linux-amd64/go1.9.4
+ modules: admin:1.0 debug:1.0 eth:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txpool:1.0 web3:1.0
+
+> 
